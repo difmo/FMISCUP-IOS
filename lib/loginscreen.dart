@@ -3,8 +3,9 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:fmiscup/suggestionscreen.dart'; // Make sure to import your suggestion screen
+import 'package:fmiscup/suggestionscreen.dart';
 import 'package:http/http.dart' as http;
+import 'dart:io';
 
 import 'globalclass.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -28,6 +29,8 @@ class _LoginScreenState extends State<LoginScreen> {
   String _generatedOtp = ''; // This will hold the OTP generated
   String? _termsError;
   String? _mobileNo;
+  double _uploadProgress = 0.0; // New variable for upload progress (0.0 to 1.0)
+  bool _showProgressDialog = false;
   String? userID;
   bool _isLoading = false;
   bool _isOtpVerified = false; // Track OTP verification status
@@ -56,10 +59,7 @@ class _LoginScreenState extends State<LoginScreen> {
     _generatedOtp = otp;
     print('otp1233 : $otp');
     final Uri url = Uri.parse(
-      'https://smsjust.com/sms/user/urlsms.php?'
-      'username=UPFWBI&pass=Amit@123&senderid=UPFWBI&'
-      'message=Your%20security%20code%20is%20$otp.%20UPFWBI&'
-      'dest_mobileno=$mobileNumber&msgtype=TXT&response=Y',
+      "https://www.smsjust.com/sms/user/urlsms.php?apikey=6c0384-dd9494-ff97df-fcefc1-14a497&senderid=UPFWBI&dlttempid=1707173503381660952&message=Your%20One-Time%20Password%20(OTP)%20for%20Login%20is%20$otp%20-%20UPFWBI%20&dest_mobileno=$mobileNumber&&response=Y",
     );
     try {
       final response = await http.get(url);
@@ -123,199 +123,216 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  Future<void> loginUserOLd() async {
+  // Future<void> loginUserOLd() async {
+  //   final String email = _emailController.text.trim();
+  //   final String password = _passwordController.text;
+  //   setState(() {
+  //     _termsError = null;
+  //   });
+  //   if (!_formKey.currentState!.validate()) return;
+  //   if (!_termsAccepted) {
+  //     setState(() {
+  //       _termsError = 'You must accept the terms and conditions';
+  //     });
+  //     return;
+  //   }
+  //   // if (email != 'user1@gmail.com' || password != 'Alok') {
+  //   //   showDialog(
+  //   //     context: context,
+  //   //     builder: (context) => AlertDialog(
+  //   //       title: const Text("Invalid User"),
+  //   //       content: const Text("Please enter correct email and password."),
+  //   //       actions: [
+  //   //         TextButton(
+  //   //           onPressed: () => Navigator.pop(context),
+  //   //           child: const Text("OK"),
+  //   //         ),
+  //   //       ],
+  //   //     ),
+  //   //   );
+  //   //   return;
+  //   // }
+  //   setState(() {
+  //     _isLoading = true;
+  //     _message = '';
+  //   });
+  //   String url =
+  //       'https://fcrupid.fmisc.up.gov.in/api/appuserapi/fmisclogin?userid=$email&password=$password';
+  //   try {
+  //     final response = await http.get(Uri.parse(url));
+  //     print('Status Code login: ${response.statusCode}');
+  //     print('Response Body login: ${response.body}');
+  //     if (response.statusCode == 200) {
+  //       final jsonResponse = json.decode(response.body);
+  //       if (jsonResponse['success'] == true) {
+  //         final data = jsonResponse['data'];
+  //         _mobileNo = data['mobileNo'];
+  //         userID = data['userID'];
+  //         print('userID  : $userID');
+  //         print('User Mobile No: $_mobileNo');
+  //         final prefs = await SharedPreferences.getInstance();
+  //         await prefs.clear();
+  //         await prefs.setString('userID', userID ?? '0');
+  //         print('Saved userID: ${prefs.getString('userID')}');
+  //         await prefs.setString('savedEmail', email);
+  //         await prefs.setString('savedPassword', password);
+  //         setState(() {
+  //           _message = 'Login Successful ✅';
+  //         });
+  //         sendOtp(_mobileNo!);
+  //       } else {
+  //         setState(() {
+  //           _message = jsonResponse['message'] ?? 'Login failed';
+  //         });
+  //       }
+  //     } else {
+  //       setState(() {
+  //         _message = 'Request failed with status: ${response.statusCode}';
+  //       });
+  //     }
+  //   } catch (e) {
+  //     setState(() {
+  //       _message = 'Error: $e';
+  //     });
+  //   } finally {
+  //     setState(() {
+  //       _isLoading = false;
+  //     });
+  //   }
+  // }
+  Future<bool> checkInternet() async {
+    try {
+      final socket = await Socket.connect(
+        'google.com',
+        80,
+        timeout: Duration(seconds: 3),
+      );
+      socket.destroy();
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> loginUser() async {
+    print('Login button pressed');
     final String email = _emailController.text.trim();
-    final String password = _passwordController.text;
+    final String password = _passwordController.text.trim();
+
+    // Clear previous error messages
     setState(() {
-      _termsError = null;
+      _message = '';
+      _termsError = '';
     });
-    if (!_formKey.currentState!.validate()) return;
+
+    // Validate form if using Form widget
+    if (_formKey.currentState != null && !_formKey.currentState!.validate()) {
+      return;
+    }
+
+    // Check terms acceptance
     if (!_termsAccepted) {
       setState(() {
         _termsError = 'You must accept the terms and conditions';
       });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please accept the terms and conditions')),
+      );
       return;
     }
-    // if (email != 'user1@gmail.com' || password != 'Alok') {
-    //   showDialog(
-    //     context: context,
-    //     builder: (context) => AlertDialog(
-    //       title: const Text("Invalid User"),
-    //       content: const Text("Please enter correct email and password."),
-    //       actions: [
-    //         TextButton(
-    //           onPressed: () => Navigator.pop(context),
-    //           child: const Text("OK"),
-    //         ),
-    //       ],
-    //     ),
-    //   );
-    //   return;
-    // }
+
     setState(() {
       _isLoading = true;
-      _message = '';
     });
+
+    final prefs = await SharedPreferences.getInstance();
     String url =
         'https://fcrupid.fmisc.up.gov.in/api/appuserapi/fmisclogin?userid=$email&password=$password';
+
     try {
-      final response = await http.get(Uri.parse(url));
-      print('Status Code login: ${response.statusCode}');
-      print('Response Body login: ${response.body}');
-      if (response.statusCode == 200) {
-        final jsonResponse = json.decode(response.body);
-        if (jsonResponse['success'] == true) {
-          final data = jsonResponse['data'];
-          _mobileNo = data['mobileNo'];
-          userID = data['userID'];
-          print('userID  : $userID');
-          print('User Mobile No: $_mobileNo');
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.clear();
-          await prefs.setString('userID', userID ?? '0');
-          print('Saved userID: ${prefs.getString('userID')}');
-          await prefs.setString('savedEmail', email);
-          await prefs.setString('savedPassword', password);
-          setState(() {
-            _message = 'Login Successful ✅';
-          });
-          sendOtp(_mobileNo!);
-        } else {
-          setState(() {
-            _message = jsonResponse['message'] ?? 'Login failed';
-          });
-        }
-      } else {
+      // final connectivityResult = await Connectivity().checkConnectivity();
+      if (await checkInternet()) {
+        await prefs.setString('offlineEmail', email);
+        await prefs.setString('offlinePassword', password);
+        showDialog(
+          context: context,
+          builder:
+              (context) => AlertDialog(
+                title: const Text("आप ऑफलाइन हैं"),
+                content: const Text(
+                  "डेटा सेव हो गया है। जैसे ही इंटरनेट आएगा, डेटा अपने आप भेज दिया जाएगा।",
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text("ठीक है"),
+                  ),
+                ],
+              ),
+        );
         setState(() {
-          _message = 'Request failed with status: ${response.statusCode}';
+          _message =
+              'No internet connection. Data saved and will be sent when online.';
         });
+      } else {
+        final response = await http.get(Uri.parse(url));
+        print('Status Code login: ${response.statusCode}');
+        print('Response Body login: ${response.body}');
+
+        try {
+          final jsonResponse = json.decode(response.body);
+          if (response.statusCode == 200 && jsonResponse['success'] == true) {
+            final data = jsonResponse['data'];
+            _mobileNo = data['mobileNo'];
+            userID = data['userID'];
+            print('userID: $userID');
+            print('User Mobile No: $_mobileNo');
+            await prefs.clear();
+            await prefs.setString('userID', userID ?? '0');
+            print('Saved userID: ${prefs.getString('userID')}');
+            await prefs.setString('savedEmail', email);
+            await prefs.setString('savedPassword', password);
+            setState(() {
+              _isOtpInputVisible = true; // Show OTP section
+              _message = 'Login Successful ✅';
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Login successful! OTP sent.')),
+            );
+            sendOtp(_mobileNo!);
+          } else {
+            setState(() {
+              _message =
+                  jsonResponse['message'] ?? 'Login failed. Please try again.';
+            });
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(_message)));
+          }
+        } catch (e) {
+          setState(() {
+            _message = 'Invalid response from server. Please try again.';
+          });
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(_message)));
+          print('Error parsing response: $e');
+        }
       }
     } catch (e) {
       setState(() {
-        _message = 'Error: $e';
+        _message =
+            'An error occurred. Please check your connection and try again.';
       });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(_message)));
+      print('Error: $e');
     } finally {
       setState(() {
         _isLoading = false;
       });
     }
-  }
-
-  Future<void> loginUser() async {
-    final String email = _emailController.text.toString().trim();
-    final String password = _passwordController.text.toString().trim();
-    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-    if (email == null || email.isEmpty) {
-      GlobalClass.customToast('Please enter your email');
-      return;
-    } else if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email)) {
-      GlobalClass.customToast('Enter a valid email address');
-      return;
-    } else if (password == null || password.isEmpty) {
-      GlobalClass.customToast('Please Enter Password');
-      return;
-    } else {
-      if (!_formKey.currentState!.validate()) return;
-      if (!_termsAccepted) {
-        setState(() {
-          _termsError = 'You must accept the terms and conditions';
-        });
-        return;
-      } else {
-        setState(() {
-          _isLoading = true;
-          _message = '';
-        });
-        final prefs = await SharedPreferences.getInstance();
-        String url =
-            'https://fcrupid.fmisc.up.gov.in/api/appuserapi/fmisclogin?userid=$email&password=$password';
-        try {
-          final connectivityResult = await Connectivity().checkConnectivity();
-          if (connectivityResult == ConnectivityResult.none) {
-            // No internet – save login info locally
-            await prefs.setString('offlineEmail', email);
-            await prefs.setString('offlinePassword', password);
-
-            showDialog(
-              context: context,
-              builder:
-                  (context) => AlertDialog(
-                    title: const Text("आप ऑफलाइन हैं"),
-                    content: const Text(
-                      "डेटा सेव हो गया है। जैसे ही इंटरनेट आएगा, डेटा अपने आप भेज दिया जाएगा।",
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text("ठीक है"),
-                      ),
-                    ],
-                  ),
-            );
-            setState(() {
-              _message =
-                  'Internet नहीं है। डेटा सेव कर लिया गया है, इंटरनेट आने पर भेजा जाएगा।';
-            });
-          } else {
-            final response = await http.get(Uri.parse(url));
-            print('Status Code login: ${response.statusCode}');
-            print('Response Body login: ${response.body}');
-            if (response.statusCode == 200) {
-              final jsonResponse = json.decode(response.body);
-              if (jsonResponse['success'] == true) {
-                final data = jsonResponse['data'];
-                _mobileNo = data['mobileNo'];
-                userID = data['userID'];
-                print('userID  : $userID');
-                print('User Mobile No: $_mobileNo');
-                final prefs = await SharedPreferences.getInstance();
-                await prefs.clear();
-                await prefs.setString('userID', userID ?? '0');
-                print('Saved userID: ${prefs.getString('userID')}');
-                await prefs.setString('savedEmail', email);
-                await prefs.setString('savedPassword', password);
-                setState(() {
-                  _message = 'Login Successful ✅';
-                });
-                sendOtp(_mobileNo!);
-              } else {
-                setState(() {
-                  _message = jsonResponse['message'] ?? 'Login failed';
-                });
-              }
-            } else {
-              setState(() {
-                _message = 'Request failed with status: ${response.statusCode}';
-              });
-            }
-          }
-        } catch (e) {
-          setState(() {
-            _message = 'Error: $e';
-          });
-        } finally {
-          _isLoading = false;
-          setState(() {});
-        }
-      }
-    }
-
-    // if (email != 'user1@gmail.com' || password != 'Alok') {
-    //   showDialog(
-    //     context: context,
-    //     builder: (context) => AlertDialog(
-    //       title: const Text("Invalid User"),
-    //       content: const Text("Please enter correct email and password."),
-    //       actions: [
-    //         TextButton(
-    //           onPressed: () => Navigator.pop(context),
-    //           child: const Text("OK"),
-    //         ),
-    //       ],
-    //     ),
-    //   );
-    //   return;
-    // }
   }
 
   // void _login() {
@@ -659,10 +676,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                 }),
                               ),
                               SizedBox(height: screenWidth * 0.05),
-                              Text(
-                                '$_message',
-                                style: TextStyle(color: Colors.red),
-                              ),
+                              // Text(
+                              //   '$_message',
+                              //   style: TextStyle(color: Colors.red),
+                              // ),
                               ElevatedButton(
                                 onPressed: verifyOtp,
                                 child: const Text(
@@ -697,13 +714,16 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
                           ),
-                        // SizedBox(height: screenWidth * 0.05),
-                        // Text(
-                        //   _message,
-                        //   style: TextStyle(
-                        //     color: _message == 'OTP Verified ✅' ? Colors.green : Colors.red,
-                        //   ),
-                        // ),
+                        SizedBox(height: screenWidth * 0.05),
+                        Text(
+                          _message,
+                          style: TextStyle(
+                            color:
+                                _message == 'OTP Verified ✅'
+                                    ? Colors.green
+                                    : Colors.red,
+                          ),
+                        ),
                       ],
                     ),
                   ),

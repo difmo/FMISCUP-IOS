@@ -33,8 +33,8 @@ android {
         applicationId = "com.techwings.fmiscup"
         minSdk = 26
         targetSdk = 35
-        versionCode = 2
-        versionName = "1.0.2"
+        versionCode = 7
+        versionName = "1.0.7"
     }
 
     signingConfigs {
@@ -51,8 +51,8 @@ android {
     buildTypes {
         getByName("release") {
             signingConfig = signingConfigs.getByName("release")
-            isShrinkResources = false
-            isMinifyEnabled = false
+            isShrinkResources = true
+            isMinifyEnabled = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }

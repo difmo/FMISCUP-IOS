@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 import 'DebugmodeScreen.dart';
 import 'dashboardscreen.dart';
 
-
 class FloodManagementSplashScreen extends StatefulWidget {
   const FloodManagementSplashScreen({super.key});
 
@@ -21,11 +20,23 @@ class _FloodManagementSplashScreenState
   void initState() {
     super.initState();
     Future.delayed(const Duration(seconds: 3), () {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const DashboardScreen()),
+      );
       checkDeveloperMode(context);
     });
   }
 
   static Future<void> checkDeveloperMode(BuildContext context) async {
+    if (!Platform.isAndroid) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const DashboardScreen()),
+      );
+      return;
+    }
+
     try {
       final bool isEnabled = await platformForDebug.invokeMethod(
         'isDeveloperModeEnabled',
@@ -33,20 +44,20 @@ class _FloodManagementSplashScreenState
       if (isEnabled) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(
-            builder: (context) => DebugModeScreen(),
-          ), // Replace with your target screen
+          MaterialPageRoute(builder: (context) => DebugModeScreen()),
         );
       } else {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(
-            builder: (context) => const DashboardScreen(),
-          ), // Replace with your target screen
+          MaterialPageRoute(builder: (context) => const DashboardScreen()),
         );
       }
     } on PlatformException catch (e) {
       print("Failed to check developer mode: ${e.message}");
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const DashboardScreen()),
+      );
     }
   }
 

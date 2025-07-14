@@ -13,14 +13,18 @@ class GenericWebScreen extends StatefulWidget {
 
 class _GenericWebScreenState extends State<GenericWebScreen> {
   late final WebViewController _controller;
+  final String pdfUrl =
+      'https://fmisc.up.gov.in/advisory/advisory2025/embankmentadvisory-2025.pdf';
 
   @override
   void initState() {
     super.initState();
+    final String viewerUrl =
+        'https://docs.google.com/gview?embedded=true&url=$pdfUrl';
     _controller =
         WebViewController()
           ..setJavaScriptMode(JavaScriptMode.unrestricted)
-          ..loadRequest(Uri.parse(widget.url));
+          ..loadRequest(Uri.parse(viewerUrl));
   }
 
   @override

@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:fmiscup/globalclass.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as path;
 import 'package:permission_handler/permission_handler.dart';
@@ -27,7 +26,6 @@ class _SuggestionScreenState extends State<SuggestionScreen> {
   String imagePathGlobal = "";
   bool _isSubmitting = false;
   String? userID;
-  String? _base64ImageString;
 
   @override
   void initState() {
@@ -145,6 +143,20 @@ class _SuggestionScreenState extends State<SuggestionScreen> {
     return compressedFile;
   }
 
+  Future<bool> checkInternet() async {
+    try {
+      final socket = await Socket.connect(
+        'google.com',
+        80,
+        timeout: Duration(seconds: 3),
+      );
+      socket.destroy();
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<void> _submitSuggestion(BuildContext context) async {
     final suggestion = _suggestionController.text.trim();
     if (suggestion.isEmpty && _pickedImage == null) {
@@ -164,7 +176,7 @@ class _SuggestionScreenState extends State<SuggestionScreen> {
       return;
     }
 
-    if (await GlobalClass.checkInternet()) {
+    if (await checkInternet()) {
       setState(() {
         _isSubmitting = true;
       });
@@ -393,11 +405,10 @@ class _SuggestionScreenState extends State<SuggestionScreen> {
                 ),
                 const SizedBox(width: 20),
                 if (_pickedImage != null)
-                  // Display the image when it's picked
                   Image.file(
-                    _pickedImage!, // Assuming _pickedImage is a File type
-                    width: 100, // Adjust width and height as necessary
-                    height: 100, // Adjust height as necessary
+                    _pickedImage!,
+                    width: 100,
+                    height: 100,
                     fit: BoxFit.cover,
                   ),
               ],

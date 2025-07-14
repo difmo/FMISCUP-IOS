@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:fmiscup/constants.dart';
 import 'package:fmiscup/globalclass.dart';
 import 'package:fmiscup/loginscreen.dart';
 import 'package:fmiscup/pdfviewerscreen.dart';
@@ -7,7 +8,6 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'genericwebscreen.dart';
 import 'ministercardscreen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image/image.dart' as img;
@@ -22,29 +22,6 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   List<dynamic> menuItems = [];
-
-  final ministers = [
-    {
-      'name': 'Yogi Adityanath',
-      'position': 'Hon\'ble Chief Minister\nUttar Pradesh',
-      'imagePath': 'assets/image/yogi.jpg',
-    },
-    {
-      'name': 'Shri Swatantra Dev Singh',
-      'position': 'Hon\'ble Cabinet Minister\nJai Shakti, Uttar Pradesh',
-      'imagePath': 'assets/image/swatantra.jpg',
-    },
-    {
-      'name': 'Shri Dinesh Khateek',
-      'position': 'Hon\'ble Minister of State\nJai Shakti, Uttar Pradesh',
-      'imagePath': 'assets/image/dinesh.jpg',
-    },
-    {
-      'name': 'Shri Ramkesh Nishad',
-      'position': 'Hon\'ble Minister of State\nJai Shakti, Uttar Pradesh',
-      'imagePath': 'assets/image/ramkesh.jpg',
-    },
-  ];
 
   @override
   void initState() {
@@ -187,7 +164,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
     return Scaffold(
       backgroundColor: const Color(0xFFB2D7F2),
       appBar: PreferredSize(
@@ -215,13 +191,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   left: 10,
                   child: Row(
                     children: [
-                      // IconButton(
-                      //   icon: const Icon(Icons.arrow_back, color: Colors.white),
-                      //   onPressed: () {
-                      //     Navigator.pop(context); // Go back
-                      //   },
-                      // ),
-                      // const SizedBox(width: 5),
                       Padding(
                         padding: const EdgeInsets.only(left: 20),
                         child: const CircleAvatar(
@@ -242,30 +211,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              // Top Bar
-              // Container(
-              //   color: Colors.blue.shade800,
-              //   padding: const EdgeInsets.symmetric(
-              //       vertical: 5, horizontal: 16),
-              //   child: Row(
-              //     children: const [
-              //       CircleAvatar(
-              //         radius: 19,
-              //         backgroundImage: AssetImage('assets/image/logo.png'),
-              //         backgroundColor: Colors.white,
-              //       ),
-              //       SizedBox(width: 12),
-              //       Text(
-              //         'FMISC-UP',
-              //         style: TextStyle(
-              //           color: Colors.white,
-              //           fontSize: 22,
-              //           fontWeight: FontWeight.bold,
-              //         ),
-              //       ),
-              //     ],
-              //   ),
-              // ),
               const SizedBox(height: 3),
               // Menu Grid
               Padding(
@@ -359,28 +304,54 @@ class _DashboardScreenState extends State<DashboardScreen> {
               //  const SizedBox(height: 10), // Ministers Cards using Wrap
               Padding(
                 padding: const EdgeInsets.all(10),
-                child: GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: ministers.length,
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: screenWidth < 600 ? 2 : 4,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
-                    childAspectRatio: 4.6 / 4,
-                  ),
-                  itemBuilder: (context, index) {
-                    final minister = ministers[index];
-                    final isWideImage = minister['name'] == 'Yogi Adityanath';
-                    return MinisterCard(
-                      name: minister['name']!,
-                      position: minister['position']!,
-                      imagePath: minister['imagePath']!,
-                      isWideImage: isWideImage,
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    double screenWidth = constraints.maxWidth;
+
+                    // Determine the number of columns and aspect ratio based on screen width
+                    int crossAxisCount;
+                    double aspectRatio;
+
+                    if (screenWidth < 600) {
+                      // Mobile
+                      crossAxisCount = 2;
+                      aspectRatio = 5.6 / 5;
+                    } else if (screenWidth < 900) {
+                      // Small Tablet
+                      crossAxisCount = 3;
+                      aspectRatio = 3.6 / 4.5;
+                    } else {
+                      crossAxisCount = 4;
+                      aspectRatio = 2.6 / 4;
+                    }
+
+                    return GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: Constants.ministers.length,
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: crossAxisCount,
+                        crossAxisSpacing: 12,
+                        mainAxisSpacing: 12,
+                        childAspectRatio: aspectRatio,
+                      ),
+                      itemBuilder: (context, index) {
+                        final minister = Constants.ministers[index];
+                        final isWideImage =
+                            minister['name'] == 'Yogi Adityanath';
+
+                        return MinisterCard(
+                          name: minister['name']!,
+                          position: minister['position']!,
+                          imagePath: minister['imagePath']!,
+                          isWideImage: isWideImage,
+                        );
+                      },
                     );
                   },
                 ),
               ),
+
               const SizedBox(height: 10),
             ],
           ),
@@ -394,21 +365,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
       onTap: () {
         final String title = item['title'];
         final String url = item['webURL'];
-        if (title == "Rainfall Bulletin") {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => PDFViewerFromUrl(title: title, url: url),
-            ),
-          );
-        } else {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => GenericWebScreen(title: title, url: url),
-            ),
-          );
-        }
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => SmartFileViewer(title: title, url: url),
+          ),
+        );
       },
       child: Container(
         decoration: BoxDecoration(
