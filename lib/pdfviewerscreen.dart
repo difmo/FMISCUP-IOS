@@ -27,6 +27,8 @@ class _SmartFileViewerState extends State<SmartFileViewer> {
   @override
   void initState() {
     super.initState();
+    print("ohooho");
+    print(widget.url);
     _detectFileTypeAndLoad();
   }
 
@@ -40,64 +42,80 @@ class _SmartFileViewerState extends State<SmartFileViewer> {
     final uri = Uri.parse(widget.url);
     final extension = p.extension(uri.path).toLowerCase();
 
-    if (extension == '.pdf') {
-      isPdf = true;
-      await _preparePdf();
-      if (localPath != null) {
-        pdfController = PdfController(
-          document: PdfDocument.openFile(localPath!),
-        );
-      }
-    } else {
-      isPdf = false;
-      setState(() {
-        isLoading = false;
-      });
-    }
-  }
+    isPdf = extension == '.pdf';
 
-  Future<void> _preparePdf() async {
-    final filename = p.basename(widget.url);
-    final dir = await getApplicationDocumentsDirectory();
-    final file = File('${dir.path}/$filename');
-
-    if (await file.exists()) {
-      setState(() {
-        localPath = file.path;
-        isLoading = false;
-      });
-    } else {
-      try {
-        final request = await HttpClient().getUrl(Uri.parse(widget.url));
-        final response = await request.close();
-
-        final totalBytes = response.contentLength ?? 0;
-        int bytesReceived = 0;
-        final raf = file.openSync(mode: FileMode.write);
-
-        await for (var chunk in response) {
-          bytesReceived += chunk.length;
-          raf.writeFromSync(chunk);
-          setState(() {
-            progress = totalBytes > 0 ? (bytesReceived / totalBytes) : 0;
-          });
+    if (isPdf) {
+      final success = await _preparePdf();
+      if (success && localPath != null) {
+        try {
+          pdfController = PdfController(
+            document: PdfDocument.openFile(localPath!),
+          );
+        } catch (e) {
+          debugPrint("PDF Controller error: $e");
+          // Fallback to WebView
+          isPdf = false;
         }
-
-        await raf.close();
-
-        setState(() {
-          localPath = file.path;
-          isLoading = false;
-        });
-      } catch (e) {
-        debugPrint("Failed to load PDF: $e");
-        setState(() {
-          isLoading = false;
-          localPath = null;
-        });
+      } else {
+        isPdf = false; // Fallback to WebView if invalid PDF
       }
     }
+
+    setState(() {
+      isLoading = false;
+    });
   }
+
+  Future<bool> _preparePdf() async {
+    try {
+      final filename = p.basename(widget.url);
+      final dir = await getApplicationDocumentsDirectory();
+      final file = File('${dir.path}/$filename');
+
+      final request = await HttpClient().getUrl(Uri.parse(widget.url));
+      final response = await request.close();
+
+      final contentLength = response.contentLength; // may be -1
+      int received = 0;
+
+      final raf = file.openSync(mode: FileMode.write);
+      await for (var chunk in response) {
+        raf.writeFromSync(chunk);
+        received += chunk.length;
+
+        setState(() {
+          // fallback: show percent if known, else just loading spinner
+          progress =
+              contentLength > 0
+                  ? (received / contentLength)
+                  : -1; // signal unknown
+        });
+      }
+      await raf.close();
+
+      // Check PDF magic bytes
+      final bytes = await file.openRead(0, 4).first;
+      if (String.fromCharCodes(bytes) != '%PDF') {
+        debugPrint("Downloaded file is NOT a valid PDF.");
+        return false;
+      }
+
+      localPath = file.path;
+      return true;
+    } catch (e) {
+      debugPrint("Exception in PDF load: $e");
+      return false;
+    }
+  }
+
+  // Future<bool> _isValidPdf(File file) async {
+  //   try {
+  //     final bytes = await file.openRead(0, 4).first;
+  //     return String.fromCharCodes(bytes) == '%PDF';
+  //   } catch (_) {
+  //     return false;
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {

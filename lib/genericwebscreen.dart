@@ -19,6 +19,7 @@ class _GenericWebScreenState extends State<GenericWebScreen> {
   @override
   void initState() {
     super.initState();
+    print("tytytytyty" + widget.url);
     final String viewerUrl =
         'https://docs.google.com/gview?embedded=true&url=$pdfUrl';
     _controller =

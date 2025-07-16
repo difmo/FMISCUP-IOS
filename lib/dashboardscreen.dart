@@ -4,7 +4,6 @@ import 'package:fmiscup/constants.dart';
 import 'package:fmiscup/globalclass.dart';
 import 'package:fmiscup/loginscreen.dart';
 import 'package:fmiscup/pdfviewerscreen.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -15,7 +14,6 @@ import 'dart:typed_data';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
-
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
@@ -84,27 +82,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
       request.fields['ID'] = lastSubmittedUserID;
       request.fields['Suggestion'] = lastSuggestionText;
       request.fields['WorkImage'] = '$_pickedImage';
-      if (_pickedImage != null) {
-        final compressedFile = await _compressImage(_pickedImage);
-        final fileSize = await compressedFile.length();
-        if (fileSize > 4 * 1024 * 1024) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Image size exceeds 4 MB after compression.'),
-            ),
-          );
-          return;
-        }
-        request.files.add(
-          await http.MultipartFile.fromPath('WorkImage', compressedFile.path),
+      final compressedFile = await _compressImage(_pickedImage);
+      final fileSize = await compressedFile.length();
+      if (fileSize > 4 * 1024 * 1024) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Image size exceeds 4 MB after compression.'),
+          ),
         );
+        return;
       }
+      request.files.add(
+        await http.MultipartFile.fromPath('WorkImage', compressedFile.path),
+      );
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
       debugPrint("Status Code sappimageupload: ${response.statusCode}");
       debugPrint("Response sappimageupload: ${response.body}");
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
+        print("hello sappimageupload: $responseData");
         if (responseData['success'] == true) {
           if (context.mounted) {
             showDialog(
@@ -152,7 +149,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
+      print("hellohello");
+      print(data);
       if (data['success']) {
+        if (!mounted) return;
         setState(() {
           menuItems = data['data'];
         });
@@ -221,7 +221,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         : GridView.count(
                           crossAxisCount:
                               MediaQuery.of(context).size.width > 600 ? 4 : 3,
-                          // Responsive grid for larger screens
+
                           crossAxisSpacing: 10,
                           mainAxisSpacing: 10,
                           shrinkWrap: true,
@@ -233,7 +233,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
               ),
               const SizedBox(height: 7),
-              // Suggestion Box
               Container(
                 margin: const EdgeInsets.symmetric(horizontal: 12),
                 decoration: BoxDecoration(
@@ -410,12 +409,5 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
       ),
     );
-  }
-
-  void _launchURL(String urlString) async {
-    final Uri url = Uri.parse(urlString);
-    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
-      throw 'Could not launch $urlString';
-    }
   }
 }

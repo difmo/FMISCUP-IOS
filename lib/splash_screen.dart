@@ -64,15 +64,14 @@ class _FloodManagementSplashScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF4fabf6), // Light blue solid background
+      backgroundColor: const Color(0xFF4fabf6),
       body: Container(
         width: double.infinity,
         decoration: BoxDecoration(
-          // Removed `const`
           gradient: LinearGradient(
             colors: [
               Color(0xFF66b5f8),
-              Colors.white.withOpacity(0.0), // ✅ Now allowed
+              Colors.white.withOpacity(0.0),
               Color(0xFF4fabf6),
             ],
             begin: Alignment.topCenter,
@@ -87,14 +86,6 @@ class _FloodManagementSplashScreenState
               const SizedBox(height: 5),
               Image.asset('assets/image/logo.png', height: 250),
               const SizedBox(height: 10),
-              // const Text('सिंचनेन समृद्धि भवति',
-              //   style: TextStyle(
-              //     fontSize: 18,
-              //     fontWeight: FontWeight.bold,
-              //     color: Colors.red,
-              //   ),
-              // ),
-              // const SizedBox(height: 10),
               const Text(
                 'Flood Management Information System Centre',
                 style: TextStyle(
@@ -113,7 +104,6 @@ class _FloodManagementSplashScreenState
                   color: Colors.black,
                 ),
               ),
-              //   const SizedBox(height: 10),
               Image.asset('assets/image/district.png', height: 270),
             ],
           ),

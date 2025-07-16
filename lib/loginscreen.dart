@@ -7,9 +7,6 @@ import 'package:fmiscup/suggestionscreen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:io';
 
-import 'globalclass.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
-
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -20,65 +17,63 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _otpController =
-      TextEditingController(); // OTP Controller
+  final TextEditingController _otpController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   String _message = '';
   bool _termsAccepted = false;
   bool _isPasswordVisible = false;
-  String _generatedOtp = ''; // This will hold the OTP generated
+  String _generatedOtp = '';
   String? _termsError;
   String? _mobileNo;
-  double _uploadProgress = 0.0; // New variable for upload progress (0.0 to 1.0)
-  bool _showProgressDialog = false;
   String? userID;
   bool _isLoading = false;
-  bool _isOtpVerified = false; // Track OTP verification status
+
   bool _isOtpInputVisible = false; // Show OTP input only after login
   List<TextEditingController> _otpControllers = List.generate(
     6,
     (index) => TextEditingController(),
   );
-  bool _showOtpSection = false;
   List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
   int _start = 30;
   Timer? _timer;
 
   // Simulated OTP
 
-  // Function to simulate OTP sending
   void sendOtp(String mobileNumber) async {
+    if (!mounted) return;
     setState(() {
-      _isOtpInputVisible = true; // Show OTP input field after login
+      _isOtpInputVisible = true;
       _message = 'Sending OTP...';
     });
-    startOtpTimer(); // ⏱️ Start 30-second timer
-    // ✅ Step 1: Generate a 4-digit OTP
+
+    startOtpTimer();
+
     final random = Random();
-    final otp = (100000 + random.nextInt(900000)).toString(); // 6-digit OTP
+    final otp = (100000 + random.nextInt(900000)).toString();
     _generatedOtp = otp;
     print('otp1233 : $otp');
+
     final Uri url = Uri.parse(
       "https://www.smsjust.com/sms/user/urlsms.php?apikey=6c0384-dd9494-ff97df-fcefc1-14a497&senderid=UPFWBI&dlttempid=1707173503381660952&message=Your%20One-Time%20Password%20(OTP)%20for%20Login%20is%20$otp%20-%20UPFWBI%20&dest_mobileno=$mobileNumber&&response=Y",
     );
+
     try {
       final response = await http.get(url);
+      if (!mounted) return;
       if (response.statusCode == 200) {
-        print('OTP API Response: ${response.body}');
-        // You can extract and store the OTP internally (for test/verification purpose if needed)
         final body = response.body.trim();
         final extractedOtp = body.substring(body.length - 5);
         print("Extracted OTP: $extractedOtp");
         setState(() {
           _message = 'OTP sent to $mobileNumber';
         });
-        // Do NOT auto-fill OTP fields here to allow manual input
       } else {
         setState(() {
           _message = 'Failed to send OTP: ${response.statusCode}';
         });
       }
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _message = 'OTP error: $e';
       });
@@ -87,12 +82,14 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void startOtpTimer() {
     _start = 30;
-    _timer?.cancel(); // Cancel existing timer if any
+    _timer?.cancel();
     _timer = Timer.periodic(Duration(seconds: 1), (timer) {
       if (_start == 0) {
         timer.cancel();
-        setState(() {}); // Update UI when timer ends
+        if (!mounted) return;
+        setState(() {});
       } else {
+        if (!mounted) return;
         setState(() {
           _start--;
         });
@@ -100,106 +97,28 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
-  // Function to verify OTP
   void verifyOtp() {
     String enteredOtp =
         _otpControllers.map((controller) => controller.text).join();
+
     if (enteredOtp == _generatedOtp || enteredOtp == '202526') {
+      if (!mounted) return;
       setState(() {
-        _isOtpVerified = true; // Mark OTP as verified
         _message = 'OTP Verified ✅';
       });
-      // Navigate to the next screen (e.g., HomeScreen) after OTP verification
+
       Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (context) => SuggestionScreen(),
-        ), // Replace HomeScreen with your target screen
+        MaterialPageRoute(builder: (context) => SuggestionScreen()),
       );
     } else {
+      if (!mounted) return;
       setState(() {
         _message = 'Invalid OTP. Please try again.';
       });
     }
   }
 
-  // Future<void> loginUserOLd() async {
-  //   final String email = _emailController.text.trim();
-  //   final String password = _passwordController.text;
-  //   setState(() {
-  //     _termsError = null;
-  //   });
-  //   if (!_formKey.currentState!.validate()) return;
-  //   if (!_termsAccepted) {
-  //     setState(() {
-  //       _termsError = 'You must accept the terms and conditions';
-  //     });
-  //     return;
-  //   }
-  //   // if (email != 'user1@gmail.com' || password != 'Alok') {
-  //   //   showDialog(
-  //   //     context: context,
-  //   //     builder: (context) => AlertDialog(
-  //   //       title: const Text("Invalid User"),
-  //   //       content: const Text("Please enter correct email and password."),
-  //   //       actions: [
-  //   //         TextButton(
-  //   //           onPressed: () => Navigator.pop(context),
-  //   //           child: const Text("OK"),
-  //   //         ),
-  //   //       ],
-  //   //     ),
-  //   //   );
-  //   //   return;
-  //   // }
-  //   setState(() {
-  //     _isLoading = true;
-  //     _message = '';
-  //   });
-  //   String url =
-  //       'https://fcrupid.fmisc.up.gov.in/api/appuserapi/fmisclogin?userid=$email&password=$password';
-  //   try {
-  //     final response = await http.get(Uri.parse(url));
-  //     print('Status Code login: ${response.statusCode}');
-  //     print('Response Body login: ${response.body}');
-  //     if (response.statusCode == 200) {
-  //       final jsonResponse = json.decode(response.body);
-  //       if (jsonResponse['success'] == true) {
-  //         final data = jsonResponse['data'];
-  //         _mobileNo = data['mobileNo'];
-  //         userID = data['userID'];
-  //         print('userID  : $userID');
-  //         print('User Mobile No: $_mobileNo');
-  //         final prefs = await SharedPreferences.getInstance();
-  //         await prefs.clear();
-  //         await prefs.setString('userID', userID ?? '0');
-  //         print('Saved userID: ${prefs.getString('userID')}');
-  //         await prefs.setString('savedEmail', email);
-  //         await prefs.setString('savedPassword', password);
-  //         setState(() {
-  //           _message = 'Login Successful ✅';
-  //         });
-  //         sendOtp(_mobileNo!);
-  //       } else {
-  //         setState(() {
-  //           _message = jsonResponse['message'] ?? 'Login failed';
-  //         });
-  //       }
-  //     } else {
-  //       setState(() {
-  //         _message = 'Request failed with status: ${response.statusCode}';
-  //       });
-  //     }
-  //   } catch (e) {
-  //     setState(() {
-  //       _message = 'Error: $e';
-  //     });
-  //   } finally {
-  //     setState(() {
-  //       _isLoading = false;
-  //     });
-  //   }
-  // }
   Future<bool> checkInternet() async {
     try {
       final socket = await Socket.connect(
@@ -214,24 +133,38 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  @override
+  void dispose() {
+    _timer?.cancel();
+    for (final controller in _otpControllers) {
+      controller.dispose();
+    }
+    for (final focusNode in _focusNodes) {
+      focusNode.dispose();
+    }
+    _emailController.dispose();
+    _passwordController.dispose();
+    _otpController.dispose();
+    super.dispose();
+  }
+
   Future<void> loginUser() async {
     print('Login button pressed');
     final String email = _emailController.text.trim();
     final String password = _passwordController.text.trim();
 
-    // Clear previous error messages
+    if (!mounted) return;
     setState(() {
       _message = '';
       _termsError = '';
     });
 
-    // Validate form if using Form widget
     if (_formKey.currentState != null && !_formKey.currentState!.validate()) {
       return;
     }
 
-    // Check terms acceptance
     if (!_termsAccepted) {
+      if (!mounted) return;
       setState(() {
         _termsError = 'You must accept the terms and conditions';
       });
@@ -241,6 +174,7 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
+    if (!mounted) return;
     setState(() {
       _isLoading = true;
     });
@@ -250,10 +184,11 @@ class _LoginScreenState extends State<LoginScreen> {
         'https://fcrupid.fmisc.up.gov.in/api/appuserapi/fmisclogin?userid=$email&password=$password';
 
     try {
-      // final connectivityResult = await Connectivity().checkConnectivity();
-      if (await checkInternet()) {
+      if (await checkInternet() == false) {
         await prefs.setString('offlineEmail', email);
         await prefs.setString('offlinePassword', password);
+
+        if (!mounted) return;
         showDialog(
           context: context,
           builder:
@@ -270,6 +205,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 ],
               ),
         );
+
+        if (!mounted) return;
         setState(() {
           _message =
               'No internet connection. Data saved and will be sent when online.';
@@ -281,69 +218,62 @@ class _LoginScreenState extends State<LoginScreen> {
 
         try {
           final jsonResponse = json.decode(response.body);
+          if (!mounted) return;
+
           if (response.statusCode == 200 && jsonResponse['success'] == true) {
             final data = jsonResponse['data'];
             _mobileNo = data['mobileNo'];
             userID = data['userID'];
-            print('userID: $userID');
-            print('User Mobile No: $_mobileNo');
+
             await prefs.clear();
             await prefs.setString('userID', userID ?? '0');
-            print('Saved userID: ${prefs.getString('userID')}');
             await prefs.setString('savedEmail', email);
             await prefs.setString('savedPassword', password);
+
+            if (!mounted) return;
             setState(() {
-              _isOtpInputVisible = true; // Show OTP section
+              _isOtpInputVisible = true;
               _message = 'Login Successful ✅';
             });
+
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Login successful! OTP sent.')),
             );
+
             sendOtp(_mobileNo!);
           } else {
+            if (!mounted) return;
             setState(() {
               _message =
                   jsonResponse['message'] ?? 'Login failed. Please try again.';
             });
+
             ScaffoldMessenger.of(
               context,
             ).showSnackBar(SnackBar(content: Text(_message)));
           }
         } catch (e) {
+          if (!mounted) return;
           setState(() {
             _message = 'Invalid response from server. Please try again.';
           });
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(_message)));
           print('Error parsing response: $e');
         }
       }
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _message =
             'An error occurred. Please check your connection and try again.';
       });
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(_message)));
       print('Error: $e');
     } finally {
+      if (!mounted) return;
       setState(() {
         _isLoading = false;
       });
     }
   }
-
-  // void _login() {
-  //   if (_termsAccepted) {
-  //     loginUser();
-  //   } else {
-  //     setState(() {
-  //       _message = 'Please accept the terms and conditions.';
-  //     });
-  //   }
-  // }
 
   @override
   void initState() {
@@ -355,6 +285,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final prefs = await SharedPreferences.getInstance();
     final savedEmail = prefs.getString('savedEmail') ?? '';
     final savedPassword = prefs.getString('savedPassword') ?? '';
+    if (!mounted) return;
     setState(() {
       _emailController.text = savedEmail;
       _passwordController.text = savedPassword;
@@ -622,10 +553,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                       : "Didn't get OTP? Tap to Resend",
                                   style: TextStyle(
                                     color:
-                                        _start == 0
-                                            ? Colors.blue
-                                            : Colors
-                                                .grey, // Highlight when tappable
+                                        _start == 0 ? Colors.blue : Colors.grey,
                                     fontWeight:
                                         _start == 0
                                             ? FontWeight.bold
@@ -635,7 +563,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                               ),
                               SizedBox(height: screenWidth * 0.02),
-                              // OTP Boxes (Six boxes)
                               Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
@@ -676,21 +603,17 @@ class _LoginScreenState extends State<LoginScreen> {
                                 }),
                               ),
                               SizedBox(height: screenWidth * 0.05),
-                              // Text(
-                              //   '$_message',
-                              //   style: TextStyle(color: Colors.red),
-                              // ),
                               ElevatedButton(
                                 onPressed: verifyOtp,
-                                child: const Text(
-                                  "Verify OTP",
-                                  style: TextStyle(color: Colors.white),
-                                ),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.indigo,
                                   padding: EdgeInsets.symmetric(
                                     horizontal: screenWidth * 0.20,
                                   ),
+                                ),
+                                child: const Text(
+                                  "Verify OTP",
+                                  style: TextStyle(color: Colors.white),
                                 ),
                               ),
                             ],
@@ -698,6 +621,12 @@ class _LoginScreenState extends State<LoginScreen> {
                         if (!_isOtpInputVisible)
                           ElevatedButton(
                             onPressed: loginUser,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.indigo,
+                              padding: EdgeInsets.symmetric(
+                                vertical: screenWidth * 0.02,
+                              ),
+                            ),
                             child:
                                 _isLoading
                                     ? const CircularProgressIndicator(
@@ -707,12 +636,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                       "Login",
                                       style: TextStyle(color: Colors.white),
                                     ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.indigo,
-                              padding: EdgeInsets.symmetric(
-                                vertical: screenWidth * 0.02,
-                              ),
-                            ),
                           ),
                         SizedBox(height: screenWidth * 0.05),
                         Text(

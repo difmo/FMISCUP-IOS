@@ -1,16 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fmiscup/globalclass.dart';
-import 'AlarmService.dart';
-import 'floodmanagementscreen.dart';
+import 'splash_screen.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await requestNotificationPermission();
   final MethodChannel methodChannel = MethodChannel("alarm_channel");
-  methodChannel.invokeListMethod("setAlarms");
-  await methodChannel.invokeMethod("requestExactAlarmPermission");
+  try {
+    await methodChannel.invokeMethod("setAlarms");
+  } on PlatformException catch (e) {
+    print("Error calling setAlarms: ${e.message}");
+  }
+
+  try {
+    await methodChannel.invokeMethod("requestExactAlarmPermission");
+  } on PlatformException catch (e) {
+    print("Error requesting exact alarm permission: ${e.message}");
+  }
   _listenMethod();
   runApp(const MyApp());
 }
@@ -19,7 +27,7 @@ void _listenMethod() {
   final methodChannel = MethodChannel("alarm_channel");
   methodChannel.setMethodCallHandler((call) async {
     if (call.method == "setAlarms") {
-      GlobalClass.customToast("hollfflhk");
+      GlobalClass.customToast("Alarm setup triggered from native");
     }
   });
 }
@@ -30,6 +38,7 @@ Future<void> requestNotificationPermission() async {
   }
 }
 
+// Root widget of the app
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 

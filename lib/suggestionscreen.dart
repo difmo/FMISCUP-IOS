@@ -4,7 +4,6 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as path;
-import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image/image.dart' as img;
 import 'package:http/http.dart' as http;
@@ -85,34 +84,34 @@ class _SuggestionScreenState extends State<SuggestionScreen> {
     return null;
   }
 
-  Future<void> _pickImageFromCamera(BuildContext context) async {
-    var status = await Permission.camera.request();
-    if (status.isGranted) {
-      try {
-        final pickedFile = await ImagePicker().pickImage(
-          source: ImageSource.camera,
-        );
-        if (pickedFile != null) {
-          final imageFile = File(pickedFile.path);
-          setState(() {
-            _pickedImage = imageFile;
-          });
-          // Now send to server as Multipart (IFormFile-compatible)
-          //   await _submitSuggestion(imageFile,context );
-        }
-      } catch (e) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text("Camera error: $e")));
-        }
-      }
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Camera permission is required')),
-      );
-    }
-  }
+  // Future<void> _pickImageFromCamera(BuildContext context) async {
+  //   var status = await Permission.camera.request();
+  //   if (status.isGranted) {
+  //     try {
+  //       final pickedFile = await ImagePicker().pickImage(
+  //         source: ImageSource.camera,
+  //       );
+  //       if (pickedFile != null) {
+  //         final imageFile = File(pickedFile.path);
+  //         setState(() {
+  //           _pickedImage = imageFile;
+  //         });
+  //         // Now send to server as Multipart (IFormFile-compatible)
+  //         //   await _submitSuggestion(imageFile,context );
+  //       }
+  //     } catch (e) {
+  //       if (context.mounted) {
+  //         ScaffoldMessenger.of(
+  //           context,
+  //         ).showSnackBar(SnackBar(content: Text("Camera error: $e")));
+  //       }
+  //     }
+  //   } else {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       const SnackBar(content: Text('Camera permission is required')),
+  //     );
+  //   }
+  // }
 
   void _handlePhotoCapture() async {
     try {
@@ -239,6 +238,7 @@ class _SuggestionScreenState extends State<SuggestionScreen> {
           context,
         ).showSnackBar(SnackBar(content: Text('Error occurred: $e')));
       } finally {
+        if (!mounted) return;
         setState(() {
           _isSubmitting = false;
         });
