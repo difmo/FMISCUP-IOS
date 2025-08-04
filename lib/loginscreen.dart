@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fmiscup/suggestionscreen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:io';
+import 'package:url_launcher/url_launcher.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -28,7 +29,7 @@ class _LoginScreenState extends State<LoginScreen> {
   String? userID;
   bool _isLoading = false;
 
-  bool _isOtpInputVisible = false; // Show OTP input only after login
+  bool _isOtpInputVisible = false;
   List<TextEditingController> _otpControllers = List.generate(
     6,
     (index) => TextEditingController(),
@@ -36,8 +37,6 @@ class _LoginScreenState extends State<LoginScreen> {
   List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
   int _start = 30;
   Timer? _timer;
-
-  // Simulated OTP
 
   void sendOtp(String mobileNumber) async {
     if (!mounted) return;
@@ -275,6 +274,15 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  Future<void> _launchTermsUrl() async {
+    final Uri url = Uri.parse(
+      'https://fcrupid.fmisc.up.gov.in/fmis/privacypolicy.html',
+    );
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+      throw 'Could not launch $url';
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -503,9 +511,36 @@ class _LoginScreenState extends State<LoginScreen> {
                                             null; // clear error on tap
                                       });
                                     },
-                                    child: const Text(
-                                      "I accept the terms and conditions",
-                                      style: TextStyle(fontSize: 12),
+                                    child: Flexible(
+                                      child: GestureDetector(
+                                        onTap: _launchTermsUrl,
+                                        child: const Text.rich(
+                                          TextSpan(
+                                            text: 'I accept the ',
+                                            children: [
+                                              TextSpan(
+                                                text: 'terms and conditions',
+                                                style: TextStyle(
+                                                  color: Colors.blue,
+                                                ),
+                                              ),
+                                              TextSpan(
+                                                text: ' and ',
+                                                style: TextStyle(
+                                                  color: Colors.black,
+                                                ),
+                                              ),
+                                              TextSpan(
+                                                text: 'privacy policy',
+                                                style: TextStyle(
+                                                  color: Colors.blue,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          style: TextStyle(fontSize: 12),
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),

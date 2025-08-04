@@ -262,8 +262,9 @@ class _SuggestionScreenState extends State<SuggestionScreen> {
       context: context,
       builder:
           (context) => AlertDialog(
-            title: const Text('Success'),
-            content: Text(text),
+            backgroundColor: Color(0xFF0047AB),
+            title: const Text('Success', style: TextStyle(color: Colors.white)),
+            content: Text(text, style: TextStyle(color: Colors.white)),
             actions: [
               TextButton(
                 onPressed: () {
@@ -276,7 +277,7 @@ class _SuggestionScreenState extends State<SuggestionScreen> {
                     (route) => false,
                   );
                 },
-                child: const Text('OK'),
+                child: const Text('OK', style: TextStyle(color: Colors.white)),
               ),
             ],
           ),

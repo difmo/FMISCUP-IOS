@@ -53,11 +53,10 @@ class _SmartFileViewerState extends State<SmartFileViewer> {
           );
         } catch (e) {
           debugPrint("PDF Controller error: $e");
-          // Fallback to WebView
           isPdf = false;
         }
       } else {
-        isPdf = false; // Fallback to WebView if invalid PDF
+        isPdf = false;
       }
     }
 
@@ -75,7 +74,7 @@ class _SmartFileViewerState extends State<SmartFileViewer> {
       final request = await HttpClient().getUrl(Uri.parse(widget.url));
       final response = await request.close();
 
-      final contentLength = response.contentLength; // may be -1
+      final contentLength = response.contentLength;
       int received = 0;
 
       final raf = file.openSync(mode: FileMode.write);
@@ -84,16 +83,11 @@ class _SmartFileViewerState extends State<SmartFileViewer> {
         received += chunk.length;
 
         setState(() {
-          // fallback: show percent if known, else just loading spinner
-          progress =
-              contentLength > 0
-                  ? (received / contentLength)
-                  : -1; // signal unknown
+          progress = contentLength > 0 ? (received / contentLength) : -1;
         });
       }
       await raf.close();
 
-      // Check PDF magic bytes
       final bytes = await file.openRead(0, 4).first;
       if (String.fromCharCodes(bytes) != '%PDF') {
         debugPrint("Downloaded file is NOT a valid PDF.");

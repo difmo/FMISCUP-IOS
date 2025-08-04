@@ -22,11 +22,14 @@ class MinisterCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF62c0fe), Colors.white], // Slightly lighter blue
+          colors: [Color(0xFF62c0fe), Colors.white],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
         ),
-        border: Border.all(color: Color(0xFF0D47A1), width: 1.5), // Deep blue border
+        border: Border.all(
+          color: Color(0xFF0D47A1),
+          width: 1.5,
+        ), // Deep blue border
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(16),
           bottomRight: Radius.circular(16),
@@ -44,7 +47,7 @@ class MinisterCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(4),
               child: Image.asset(
                 imagePath,
-                width: isWideImage ? 100 : 70,  // Wider for specific ministers
+                width: isWideImage ? 100 : 70, // Wider for specific ministers
                 height: isWideImage ? 89 : 70,
                 fit: BoxFit.cover,
               ),
