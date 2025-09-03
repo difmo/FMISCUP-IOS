@@ -19,7 +19,7 @@ class _FloodManagementSplashScreenState
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(seconds: 3), () {
+    Future.delayed(const Duration(seconds: 2), () {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const DashboardScreen()),
@@ -93,6 +93,7 @@ class _FloodManagementSplashScreenState
                   fontWeight: FontWeight.bold,
                   color: Colors.red,
                 ),
+                textAlign: TextAlign.center,
               ),
               const SizedBox(height: 10),
               const Text(

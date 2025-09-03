@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fmiscup/suggestionscreen.dart';
@@ -276,7 +277,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _launchTermsUrl() async {
     final Uri url = Uri.parse(
-      'https://fcrupid.fmisc.up.gov.in/fmis/privacypolicy.html',
+      // 'https://fcrupid.fmisc.up.gov.in/fmis/privacypolicy.html',
+      'https://twisworld.in/privacy_en.html',
     );
     if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
       throw 'Could not launch $url';
@@ -491,55 +493,56 @@ class _LoginScreenState extends State<LoginScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Checkbox(
-                                  value: _termsAccepted,
-                                  onChanged: (bool? value) {
-                                    setState(() {
-                                      _termsAccepted = value!;
-                                      _termsError =
-                                          null; // clear error on change
-                                    });
-                                  },
+                                Container(
+                                  height: 28,
+                                  child: Checkbox(
+                                    value: _termsAccepted,
+                                    onChanged: (bool? value) {
+                                      setState(() {
+                                        _termsAccepted = value!;
+                                        _termsError = null;
+                                      });
+                                    },
+                                  ),
                                 ),
                                 Expanded(
-                                  child: InkWell(
+                                  child: GestureDetector(
                                     onTap: () {
                                       setState(() {
                                         _termsAccepted = !_termsAccepted;
-                                        _termsError =
-                                            null; // clear error on tap
+                                        _termsError = null;
                                       });
                                     },
-                                    child: Flexible(
-                                      child: GestureDetector(
-                                        onTap: _launchTermsUrl,
-                                        child: const Text.rich(
-                                          TextSpan(
-                                            text: 'I accept the ',
-                                            children: [
-                                              TextSpan(
-                                                text: 'terms and conditions',
-                                                style: TextStyle(
-                                                  color: Colors.blue,
-                                                ),
-                                              ),
-                                              TextSpan(
-                                                text: ' and ',
-                                                style: TextStyle(
-                                                  color: Colors.black,
-                                                ),
-                                              ),
-                                              TextSpan(
-                                                text: 'privacy policy',
-                                                style: TextStyle(
-                                                  color: Colors.blue,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          style: TextStyle(fontSize: 12),
+                                    child: RichText(
+                                      text: TextSpan(
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.black,
                                         ),
+                                        children: [
+                                          const TextSpan(text: 'I accept the '),
+                                          TextSpan(
+                                            text: 'terms and conditions',
+                                            style: const TextStyle(
+                                              color: Colors.blue,
+                                            ),
+                                            recognizer:
+                                                TapGestureRecognizer()
+                                                  ..onTap = _launchTermsUrl,
+                                          ),
+                                          const TextSpan(text: ' and '),
+                                          TextSpan(
+                                            text: 'privacy policy',
+                                            style: const TextStyle(
+                                              color: Colors.blue,
+                                            ),
+                                            recognizer:
+                                                TapGestureRecognizer()
+                                                  ..onTap = _launchTermsUrl,
+                                          ),
+                                        ],
                                       ),
                                     ),
                                   ),

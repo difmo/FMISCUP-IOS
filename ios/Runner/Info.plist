@@ -15,7 +15,7 @@
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>This app requires your location to show nearby information and improve the user experience.</string>
 	<key>CFBundleDisplayName</key>
-	<string>Fmiscup</string>
+	<string>FMIS-UP</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -55,5 +55,11 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
+
 </dict>
 </plist>
