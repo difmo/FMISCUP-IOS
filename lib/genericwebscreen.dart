@@ -4,7 +4,6 @@ import 'package:webview_flutter/webview_flutter.dart';
 class GenericWebScreen extends StatefulWidget {
   final String title;
   final String url;
-
   const GenericWebScreen({super.key, required this.title, required this.url});
 
   @override
