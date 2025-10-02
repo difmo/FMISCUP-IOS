@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fmiscup/suggestionscreen.dart';
 import 'package:http/http.dart' as http;
-import 'dart:io';
 import 'package:url_launcher/url_launcher.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -53,9 +52,15 @@ class _LoginScreenState extends State<LoginScreen> {
     _generatedOtp = otp;
     print('otp1233 : $otp');
 
-    final Uri url = Uri.parse(
-      "https://www.smsjust.com/sms/user/urlsms.php?apikey=6c0384-dd9494-ff97df-fcefc1-14a497&senderid=UPFWBI&dlttempid=1707173503381660952&message=Your%20One-Time%20Password%20(OTP)%20for%20Login%20is%20$otp%20-%20UPFWBI%20&dest_mobileno=$mobileNumber&&response=Y",
-    );
+    // https://bulksms.bsnl.in:5010/api/Push_SMS?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6IjExMjI3IDEiLCJuYmYiOjE3NTkzMDc0OTEsImV4cCI6MTc5MDg0MzQ5MSwiaWF0IjoxNzU5MzA3NDkxLCJpc3MiOiJodHRwczovL2J1bGtzbXMuYnNubC5pbjo1MDEwIiwiYXVkIjoiMTEyMjcgMSJ9.fVsQNJxKwmel8pT9QSNwpGXTbih5cZpjo5bQ-Mp2d9k&header=FMISUP&target=9717072758&message=Your%20One%20Time%20Password%20for%20Login%20is%20123456%0A-%20Flood%20Management%20Info%20Sys%20Centre%20Irrigation%20Department%20UP&type=TXN&templateid=1407175930492674022&entityid=1401706860000076282&unicode=0&flash=0
+
+    final String apiUrl =
+        "https://bulksms.bsnl.in:5010/api/Push_SMS?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6IjExMjI3IDEiLCJuYmYiOjE3NTkzMDc0OTEsImV4cCI6MTc5MDg0MzQ5MSwiaWF0IjoxNzU5MzA3NDkxLCJpc3MiOiJodHRwczovL2J1bGtzbXMuYnNubC5pbjo1MDEwIiwiYXVkIjoiMTEyMjcgMSJ9.fVsQNJxKwmel8pT9QSNwpGXTbih5cZpjo5bQ-Mp2d9k&header=FMISUP&target=$mobileNumber&message=Your%20One%20Time%20Password%20for%20Login%20is%20$otp%0A-%20Flood%20Management%20Info%20Sys%20Centre%20Irrigation%20Department%20UP&type=TXN&templateid=1407175930492674022&entityid=1401706860000076282&unicode=0&flash=0";
+
+    final Uri url = Uri.parse(apiUrl);
+    // final Uri url = Uri.parse(
+    //   "https://www.smsjust.com/sms/user/urlsms.php?apikey=6c0384-dd9494-ff97df-fcefc1-14a497&senderid=UPFWBI&dlttempid=1707173503381660952&message=Your%20One-Time%20Password%20(OTP)%20for%20Login%20is%20$otp%20-%20UPFWBI%20&dest_mobileno=$mobileNumber&&response=Y",
+    // );
 
     try {
       final response = await http.get(url);
@@ -119,15 +124,27 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  // Future<bool> checkInternet() async {
+  //   try {
+  //     final socket = await Socket.connect(
+  //       'google.com',
+  //       80,
+  //       timeout: Duration(seconds: 3),
+  //     );
+  //     socket.destroy();
+  //     return true;
+  //   } catch (_) {
+  //     return false;
+  //   }
+  // }
+
   Future<bool> checkInternet() async {
     try {
-      final socket = await Socket.connect(
-        'google.com',
-        80,
-        timeout: Duration(seconds: 3),
-      );
-      socket.destroy();
-      return true;
+      final response = await http
+          .get(Uri.parse("https://www.google.com"))
+          .timeout(const Duration(seconds: 3));
+
+      return response.statusCode == 200;
     } catch (_) {
       return false;
     }
@@ -278,7 +295,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _launchTermsUrl() async {
     final Uri url = Uri.parse(
       // 'https://fcrupid.fmisc.up.gov.in/fmis/privacypolicy.html',
-      'https://twisworld.in/privacy_en.html',
+      'https://fcrupid.fmisc.up.gov.in/privacy-fmis.html',
     );
     if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
       throw 'Could not launch $url';
