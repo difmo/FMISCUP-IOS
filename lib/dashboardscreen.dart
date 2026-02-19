@@ -4,6 +4,7 @@ import 'package:fmiscup/constants.dart';
 import 'package:fmiscup/globalclass.dart';
 import 'package:fmiscup/loginscreen.dart';
 import 'package:fmiscup/pdfviewerscreen.dart';
+import 'package:fmiscup/suggestionscreen.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -11,6 +12,7 @@ import 'ministercardscreen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image/image.dart' as img;
 import 'dart:typed_data';
+import 'api_client.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -144,21 +146,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> fetchMenuItems() async {
-    final response = await http.get(
-      Uri.parse('https://fcrupid.fmisc.up.gov.in/api/appuserapi/webview'),
-    );
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      print("hellohello");
-      print(data);
-      if (data['success']) {
-        if (!mounted) return;
-        setState(() {
-          menuItems = data['data'];
-        });
+    try {
+      final response = await ApiClient().get(
+        Uri.parse('https://fcrupid.fmisc.up.gov.in/api/appuserapi/webview'),
+        headers: {
+          'Accept': 'application/json, text/plain, */*',
+          'User-Agent':
+              'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Mobile Safari/537.36',
+          'Connection': 'keep-alive',
+          'Content-Type': 'application/json',
+        },
+      );
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success']) {
+          if (!mounted) return;
+          setState(() {
+            menuItems = data['data'];
+          });
+        }
+      } else {
+        throw Exception('Failed to load menu items');
       }
-    } else {
-      throw Exception('Failed to load menu items');
+    } catch (e) {
+      debugPrint("Error fetching menu items: $e");
     }
   }
 
@@ -247,7 +258,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => LoginScreen()),
+                      MaterialPageRoute(
+                        builder: (context) => SuggestionScreen(),
+                      ),
                     );
                   },
                   child: Center(

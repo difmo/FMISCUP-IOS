@@ -9,7 +9,9 @@ import 'package:image/image.dart' as img;
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'dashboardscreen.dart';
+import 'loginscreen.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'api_client.dart';
 
 class SuggestionScreen extends StatefulWidget {
   const SuggestionScreen({super.key});
@@ -34,10 +36,33 @@ class _SuggestionScreenState extends State<SuggestionScreen> {
 
   Future<void> _loadUserID() async {
     final prefs = await SharedPreferences.getInstance();
+    final String? storedUserID = prefs.getString('userID');
+
+    if (storedUserID == null || storedUserID.isEmpty) {
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
+        );
+      }
+      return;
+    }
+
     setState(() {
-      userID = prefs.getString('userID'); // ✅ Get userID
+      userID = storedUserID;
     });
     print('Retrieved User ID: $userID');
+  }
+
+  Future<void> _logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+    if (!mounted) return;
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
+      (route) => false,
+    );
   }
 
   Future<File?> _takePhoto() async {
@@ -183,13 +208,7 @@ class _SuggestionScreenState extends State<SuggestionScreen> {
         final uri = Uri.parse(
           "https://fcrupid.fmisc.up.gov.in/api/appsuggapi/sappimageupload",
         );
-        final request = http.MultipartRequest('POST', uri);
-        request.fields['ID'] = userID!;
-        request.fields['Suggestion'] =
-            suggestion.isNotEmpty ? suggestion : 'desc';
-        request.fields['WorkImage'] = '$_pickedImage';
-
-        print('userID : $userID');
+        List<http.MultipartFile> files = [];
         if (_pickedImage != null) {
           final compressedFile = await _compressImage(_pickedImage!);
           final fileSize = await compressedFile.length();
@@ -204,11 +223,26 @@ class _SuggestionScreenState extends State<SuggestionScreen> {
             });
             return;
           }
-          request.files.add(
+          files.add(
             await http.MultipartFile.fromPath('WorkImage', compressedFile.path),
           );
         }
-        final streamedResponse = await request.send();
+
+        final streamedResponse = await ApiClient().sendMultipartRequest(
+          'POST',
+          uri,
+          headers: {
+            'Accept': 'application/json, text/plain, */*',
+            'User-Agent':
+                'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Mobile Safari/537.36',
+            'Connection': 'keep-alive',
+          },
+          fields: {
+            'ID': userID!,
+            'Suggestion': suggestion.isNotEmpty ? suggestion : 'desc',
+          },
+          files: files,
+        );
         final response = await http.Response.fromStream(streamedResponse);
         debugPrint("Status Code sappimageupload: ${response.statusCode}");
         debugPrint("Response sappimageupload: ${response.body}");
@@ -356,6 +390,50 @@ class _SuggestionScreenState extends State<SuggestionScreen> {
                         backgroundColor: Colors.white,
                       ),
                     ],
+                  ),
+                ),
+                Positioned(
+                  right: 15,
+                  child: InkWell(
+                    onTap: () {
+                      showDialog(
+                        context: context,
+                        builder:
+                            (ctx) => AlertDialog(
+                              title: const Text('Logout'),
+                              content: const Text(
+                                'Are you sure you want to logout?',
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(ctx),
+                                  child: const Text('Cancel'),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.pop(ctx);
+                                    _logout();
+                                  },
+                                  child: const Text('Logout'),
+                                ),
+                              ],
+                            ),
+                      );
+                    },
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: const [
+                        Icon(Icons.logout, color: Colors.white, size: 24),
+                        Text(
+                          'Logout',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],

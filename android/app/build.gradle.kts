@@ -17,7 +17,7 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace = "com.techwings.fmiscup"
-    compileSdk = 35
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -37,20 +37,22 @@ android {
         versionName = "1.0.14"
     }
 
-    signingConfigs {
-        create("release") {
-            keyAlias = keystoreProperties ["keyAlias"] as String?
-            keyPassword = keystoreProperties ["keyPassword"]  as String?
-            storeFile = file(keystoreProperties["storeFile"] as String)
-            storePassword = keystoreProperties ["storePassword"] as String?
-        }
-
-    }
+    // signingConfigs {
+    //     create("release") {
+    //         keyAlias = keystoreProperties ["keyAlias"] as String?
+    //         keyPassword = keystoreProperties ["keyPassword"]  as String?
+    //         val storeFileVal = keystoreProperties["storeFile"] as String?
+    //         if (storeFileVal != null) {
+    //             storeFile = file(storeFileVal)
+    //         }
+    //         storePassword = keystoreProperties ["storePassword"] as String?
+    //     }
+    // }
 
 
     buildTypes {
         getByName("release") {
-            signingConfig = signingConfigs.getByName("release")
+            signingConfig = signingConfigs.getByName("debug")
             isShrinkResources = false
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")

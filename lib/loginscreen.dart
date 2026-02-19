@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fmiscup/suggestionscreen.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
+import 'api_client.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -63,7 +64,7 @@ class _LoginScreenState extends State<LoginScreen> {
     // );
 
     try {
-      final response = await http.get(url);
+      final response = await ApiClient().get(url);
       if (!mounted) return;
       if (response.statusCode == 200) {
         final body = response.body.trim();
@@ -229,7 +230,7 @@ class _LoginScreenState extends State<LoginScreen> {
               'No internet connection. Data saved and will be sent when online.';
         });
       } else {
-        final response = await http.get(Uri.parse(url));
+        final response = await ApiClient().get(Uri.parse(url));
         print('Status Code login: ${response.statusCode}');
         print('Response Body login: ${response.body}');
 
