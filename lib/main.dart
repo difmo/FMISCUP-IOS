@@ -1,10 +1,13 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+
 import 'package:flutter/services.dart';
 import 'package:fmiscup/globalclass.dart';
 import 'splash_screen.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 void main() async {
+  HttpOverrides.global = MyHttpOverrides();
   WidgetsFlutterBinding.ensureInitialized();
   await requestNotificationPermission();
   final MethodChannel methodChannel = MethodChannel("alarm_channel");
@@ -52,5 +55,14 @@ class MyApp extends StatelessWidget {
       ),
       home: FloodManagementSplashScreen(),
     );
+  }
+}
+
+class MyHttpOverrides extends HttpOverrides {
+  @override
+  HttpClient createHttpClient(SecurityContext? context) {
+    return super.createHttpClient(context)
+      ..badCertificateCallback =
+          (X509Certificate cert, String host, int port) => true;
   }
 }

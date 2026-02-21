@@ -424,14 +424,14 @@ class _SuggestionScreenState extends State<SuggestionScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: const [
                         Icon(Icons.logout, color: Colors.white, size: 24),
-                        Text(
-                          'Logout',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                        // Text(
+                        //   'Logout',
+                        //   style: TextStyle(
+                        //     color: Colors.white,
+                        //     fontSize: 10,
+                        //     fontWeight: FontWeight.bold,
+                        //   ),
+                        // ),
                       ],
                     ),
                   ),
