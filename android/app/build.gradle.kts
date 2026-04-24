@@ -33,26 +33,26 @@ android {
         applicationId = "com.techwings.fmiscup"
         minSdk = 26
         targetSdk = 35
-        versionCode = 14
-        versionName = "1.0.14"
+        versionCode = 15
+        versionName = "1.0.15"
     }
 
-    // signingConfigs {
-    //     create("release") {
-    //         keyAlias = keystoreProperties ["keyAlias"] as String?
-    //         keyPassword = keystoreProperties ["keyPassword"]  as String?
-    //         val storeFileVal = keystoreProperties["storeFile"] as String?
-    //         if (storeFileVal != null) {
-    //             storeFile = file(storeFileVal)
-    //         }
-    //         storePassword = keystoreProperties ["storePassword"] as String?
-    //     }
-    // }
+    signingConfigs {
+        create("release") {
+            keyAlias = keystoreProperties["keyAlias"] as String?
+            keyPassword = keystoreProperties["keyPassword"] as String?
+            val storeFileVal = keystoreProperties["storeFile"] as String?
+            if (storeFileVal != null) {
+                storeFile = file(storeFileVal)
+            }
+            storePassword = keystoreProperties["storePassword"] as String?
+        }
+    }
 
 
     buildTypes {
         getByName("release") {
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
             isShrinkResources = false
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
