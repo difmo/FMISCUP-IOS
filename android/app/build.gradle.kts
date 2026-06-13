@@ -32,18 +32,18 @@ android {
     defaultConfig {
         applicationId = "com.techwings.fmiscup"
         minSdk = 26
-        targetSdk = 36
-        versionCode = 14
-        versionName = "1.0.14"
+        targetSdk = 35
+        versionCode = 16
+        versionName = "1.0.16"
     }
 
     signingConfigs {
         create("release") {
             keyAlias = keystoreProperties["keyAlias"] as String?
             keyPassword = keystoreProperties["keyPassword"] as String?
-            val storeFilePath = keystoreProperties["storeFile"] as String?
-            if (storeFilePath != null) {
-                storeFile = file(storeFilePath)
+            val storeFileVal = keystoreProperties["storeFile"] as String?
+            if (storeFileVal != null) {
+                storeFile = file(storeFileVal)
             }
             storePassword = keystoreProperties["storePassword"] as String?
         }
@@ -52,9 +52,13 @@ android {
 
     buildTypes {
         getByName("release") {
+<<<<<<< HEAD
             if (keystorePropertiesFile.exists()) {
                 signingConfig = signingConfigs.getByName("release")
             }
+=======
+            signingConfig = if (keystorePropertiesFile.exists()) signingConfigs.getByName("release") else signingConfigs.getByName("debug")
+>>>>>>> pritam2
             isShrinkResources = false
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")

@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fmiscup/suggestionscreen.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
+import 'api_client.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -63,7 +64,7 @@ class _LoginScreenState extends State<LoginScreen> {
     // );
 
     try {
-      final response = await http.get(url);
+      final response = await ApiClient().get(url);
       if (!mounted) return;
       if (response.statusCode == 200) {
         final body = response.body.trim();
@@ -102,7 +103,7 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
-  void verifyOtp() {
+  Future<void> verifyOtp() async {
     String enteredOtp =
         _otpControllers.map((controller) => controller.text).join();
 
@@ -111,6 +112,12 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() {
         _message = 'OTP Verified ✅';
       });
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+      await prefs.setString('userID', userID ?? '0');
+      await prefs.setString('savedEmail', _emailController.text.trim());
+      await prefs.setString('savedPassword', _passwordController.text.trim());
 
       Navigator.push(
         context,
@@ -229,7 +236,7 @@ class _LoginScreenState extends State<LoginScreen> {
               'No internet connection. Data saved and will be sent when online.';
         });
       } else {
-        final response = await http.get(Uri.parse(url));
+        final response = await ApiClient().get(Uri.parse(url));
         print('Status Code login: ${response.statusCode}');
         print('Response Body login: ${response.body}');
 
@@ -242,10 +249,7 @@ class _LoginScreenState extends State<LoginScreen> {
             _mobileNo = data['mobileNo'];
             userID = data['userID'];
 
-            await prefs.clear();
-            await prefs.setString('userID', userID ?? '0');
-            await prefs.setString('savedEmail', email);
-            await prefs.setString('savedPassword', password);
+            // Persist login only after OTP verification
 
             if (!mounted) return;
             setState(() {
