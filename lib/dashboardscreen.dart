@@ -23,6 +23,16 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   List<dynamic> menuItems = [];
 
+  String _formatTitle(String title) {
+    List<String> words = title.split(' ');
+    if (words.length <= 1) return title;
+    if (words.length == 3) {
+      return '${words[0]} ${words[1]}\n${words[2]}';
+    }
+    int mid = words.length ~/ 2;
+    return '${words.sublist(0, mid).join(' ')}\n${words.sublist(mid).join(' ')}';
+  }
+
   @override
   void initState() {
     super.initState();
@@ -229,18 +239,76 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child:
                     menuItems.isEmpty
                         ? const Center(child: CircularProgressIndicator())
-                        : GridView.count(
-                          crossAxisCount:
-                              MediaQuery.of(context).size.width > 600 ? 4 : 3,
+                        : LayoutBuilder(
+                          builder: (context, constraints) {
+                            int crossAxisCount =
+                                MediaQuery.of(context).size.width > 600 ? 4 : 3;
+                            List<List<dynamic>> rows = [];
+                            for (
+                              int i = 0;
+                              i < menuItems.length;
+                              i += crossAxisCount
+                            ) {
+                              int end = i + crossAxisCount;
+                              if (end > menuItems.length) {
+                                end = menuItems.length;
+                              }
+                              rows.add(menuItems.sublist(i, end));
+                            }
 
-                          crossAxisSpacing: 10,
-                          mainAxisSpacing: 10,
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          children:
-                              menuItems
-                                  .map((item) => buildMenuItem(context, item))
-                                  .toList(),
+                            return Column(
+                              children:
+                                  rows.asMap().entries.map((entry) {
+                                    int rowIndex = entry.key;
+                                    List<dynamic> rowItems = entry.value;
+
+                                    return Padding(
+                                      padding: EdgeInsets.only(
+                                        bottom:
+                                            rowIndex == rows.length - 1
+                                                ? 0
+                                                : 10,
+                                      ),
+                                      child: IntrinsicHeight(
+                                        child: Row(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.stretch,
+                                          children: List.generate(
+                                            crossAxisCount,
+                                            (colIndex) {
+                                              Widget childWidget;
+                                              if (colIndex < rowItems.length) {
+                                                childWidget = buildMenuItem(
+                                                  context,
+                                                  rowItems[colIndex],
+                                                );
+                                              } else {
+                                                childWidget =
+                                                    const SizedBox.shrink();
+                                              }
+
+                                              return Expanded(
+                                                child: Padding(
+                                                  padding: EdgeInsets.only(
+                                                    left: colIndex == 0 ? 0 : 5,
+                                                    right:
+                                                        colIndex ==
+                                                                crossAxisCount -
+                                                                    1
+                                                            ? 0
+                                                            : 5,
+                                                  ),
+                                                  child: childWidget,
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  }).toList(),
+                            );
+                          },
                         ),
               ),
               const SizedBox(height: 7),
@@ -320,45 +388,77 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   builder: (context, constraints) {
                     double screenWidth = constraints.maxWidth;
 
-                    // Determine the number of columns and aspect ratio based on screen width
                     int crossAxisCount;
-                    double aspectRatio;
-
                     if (screenWidth < 600) {
-                      // Mobile
                       crossAxisCount = 2;
-                      aspectRatio = 5.6 / 5;
                     } else if (screenWidth < 900) {
-                      // Small Tablet
                       crossAxisCount = 3;
-                      aspectRatio = 3.6 / 4.5;
                     } else {
                       crossAxisCount = 4;
-                      aspectRatio = 2.6 / 4;
                     }
 
-                    return GridView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: Constants.ministers.length,
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: crossAxisCount,
-                        crossAxisSpacing: 12,
-                        mainAxisSpacing: 12,
-                        childAspectRatio: aspectRatio,
-                      ),
-                      itemBuilder: (context, index) {
-                        final minister = Constants.ministers[index];
-                        final isWideImage =
-                            minister['name'] == 'Yogi Adityanath';
+                    List<List<Map<String, String>>> rows = [];
+                    for (
+                      int i = 0;
+                      i < Constants.ministers.length;
+                      i += crossAxisCount
+                    ) {
+                      int end = i + crossAxisCount;
+                      if (end > Constants.ministers.length) {
+                        end = Constants.ministers.length;
+                      }
+                      rows.add(Constants.ministers.sublist(i, end));
+                    }
 
-                        return MinisterCard(
-                          name: minister['name']!,
-                          position: minister['position']!,
-                          imagePath: minister['imagePath']!,
-                          isWideImage: isWideImage,
-                        );
-                      },
+                    return Column(
+                      children:
+                          rows.asMap().entries.map((entry) {
+                            int rowIndex = entry.key;
+                            List<Map<String, String>> rowItems = entry.value;
+
+                            return Padding(
+                              padding: EdgeInsets.only(
+                                bottom: rowIndex == rows.length - 1 ? 0 : 12,
+                              ),
+                              child: IntrinsicHeight(
+                                child: Row(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: List.generate(crossAxisCount, (
+                                    colIndex,
+                                  ) {
+                                    Widget childWidget;
+                                    if (colIndex < rowItems.length) {
+                                      final minister = rowItems[colIndex];
+                                      final isWideImage =
+                                          minister['name'] == 'Yogi Adityanath';
+                                      childWidget = MinisterCard(
+                                        name: minister['name']!,
+                                        position: minister['position']!,
+                                        imagePath: minister['imagePath']!,
+                                        isWideImage: isWideImage,
+                                      );
+                                    } else {
+                                      childWidget = const SizedBox.shrink();
+                                    }
+
+                                    return Expanded(
+                                      child: Padding(
+                                        padding: EdgeInsets.only(
+                                          left: colIndex == 0 ? 0 : 6,
+                                          right:
+                                              colIndex == crossAxisCount - 1
+                                                  ? 0
+                                                  : 6,
+                                        ),
+                                        child: childWidget,
+                                      ),
+                                    );
+                                  }),
+                                ),
+                              ),
+                            );
+                          }).toList(),
                     );
                   },
                 ),
@@ -396,6 +496,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             bottomRight: Radius.circular(16),
           ),
         ),
+        padding: const EdgeInsets.symmetric(vertical: 8),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -406,12 +507,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
               errorBuilder:
                   (_, __, ___) => const Icon(Icons.image_not_supported),
             ),
-            const SizedBox(height: 3),
+            const SizedBox(height: 4),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
               child: Text(
-                item['title'],
+                _formatTitle(item['title']),
                 textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 10,

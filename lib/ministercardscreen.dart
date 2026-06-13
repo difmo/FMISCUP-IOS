@@ -14,12 +14,22 @@ class MinisterCard extends StatelessWidget {
     this.isWideImage = false,
   });
 
+  String _formatText(String text) {
+    List<String> words = text.split(' ');
+    if (words.length <= 1) return text;
+    if (words.length == 3) {
+      return '${words[0]} ${words[1]}\n${words[2]}';
+    }
+    int mid = words.length ~/ 2;
+    return '${words.sublist(0, mid).join(' ')}\n${words.sublist(mid).join(' ')}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     return Container(
       width: screenWidth * 0.4,
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 6),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [Color(0xFF62c0fe), Colors.white],
@@ -36,6 +46,7 @@ class MinisterCard extends StatelessWidget {
         ),
       ),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
             padding: const EdgeInsets.all(2),
@@ -47,28 +58,33 @@ class MinisterCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(4),
               child: Image.asset(
                 imagePath,
-                width: isWideImage ? 100 : 70, // Wider for specific ministers
-                height: isWideImage ? 89 : 70,
+                width: isWideImage ? 120 : 80, // Wider for specific ministers
+                height: isWideImage ? 95 : 80,
                 fit: BoxFit.cover,
+                alignment: Alignment.topCenter,
               ),
             ),
           ),
-          const SizedBox(height: 3),
+          const SizedBox(height: 4),
           Text(
-            name,
+            _formatText(name),
             textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
             style: GoogleFonts.poppins(
               fontWeight: FontWeight.w700,
               fontSize: screenWidth * 0.030,
               color: Colors.black,
             ),
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: 3),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4),
             child: Text(
               position,
               textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
               style: GoogleFonts.poppins(
                 fontSize: screenWidth * 0.023,
                 fontWeight: FontWeight.w600,
